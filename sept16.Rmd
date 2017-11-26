@@ -1,0 +1,200 @@
+---
+title: "EXAMEN 2016"
+author: "Software Estadístico II"
+date: "26 de noviembre de 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+```
+
+### EJERCICIO 1
+
+#### Dado un número entero positivo n, sume los cuadrados de los enteros entre 1 y nn. Verifique si esta suma es múltiplo de n.
+
+
+```{r}
+n<-12
+sc<-ifelse(sum((1:n)^2)%%n==0,paste(sum((1:n)^2),' es múltiplo de ',n),paste(sum((1:n)^2),' no es múltiplo de',n))
+sc
+```
+
+
+### EJERCICIO 2
+
+#### Simule el lanzamiento de un dado 1000000 veces. Muestre la cantidad de veces que sale cada número.
+
+- Resuélvelo utilizando $for$.
+
+```{r,eval=FALSE}
+simulacion1<-NULL
+t.inicio1<-proc.time()
+for(i in 1:1000000)
+  simulacion1<-append(simulacion1,sample(1:6,1))
+table(simulacion1)
+t.final1<-proc.time()
+```
+
+- Resuélvelo vectorizando.
+
+```{r}
+# b. VECTORIZANDO
+t.inicio2<-proc.time()
+simulacion2<-sample(1:6,1000000,replace=TRUE)
+table(simulacion2)
+t.final2<-proc.time()
+```
+
+Ahora comparamos los tiempos de ejecución (SI SE EJECUTAR TARDA MUCHO CON EL for):
+
+```{r,eval=FALSE}
+tiempo1<-t.final1-t.inicio1
+tiempo2<-t.final2-t.inicio2
+
+tiempo1
+tiempo2
+
+#otra forma:
+
+system.time({
+  simulacion1<-NULL
+  for(i in 1:1000000)
+    simulacion1<-append(simulacion1,sample(1:6,1))
+  table(simulacion1)
+})
+
+system.time({
+  simulacion2<-sample(1:6,1000000,replace=TRUE)
+  table(simulacion2)
+})
+```
+
+### EJERCICIO 3 
+
+#### Dado el siguiente vector:
+
+```{r}
+x<-c(8,23,15,NA,21,7,NA,NA,6,91,NA,12)
+```
+
+- Escribe un programa que devuelva las posiciones de lso valores peridos de x.
+
+```{r}
+which(is.na(x))
+```
+
+
+- Escribe un programa que de el número de valores no perdidos en x.
+
+```{r}
+sum(!is.na(x))
+```
+
+- Escribe un programa que cambie los valores peridos de x por la mediana de los valores no perdidos.
+
+```{r}
+ifelse(is.na(x),median(x,na.rm=T),x)
+```
+
+- Escribe una función con argumento de entrada un vector x y que devuelva un vector con los valores  reemplazados por la media de los valores no perdidos de x.
+
+```{r}
+reemplazo<-function(x) ifelse(is.na(x),mean(x,na.rm=TRUE),x)
+reemplazo(x)
+```
+
+### EJERCICIO 4
+
+#### Dado el data.frame mtcars de la librería datasets:
+
+- Escribe un programa que dibuje un gráfico de dispersión de la variable hp frente a mpg, utilizando un color diferente para cada nivel de la variable carb.
+
+```{r}
+data(mtcars)
+str(mtcars)
+plot(mtcars$mpg~mtcars$hp,
+     col=mtcars$carb,
+     main='DIAGRAMA DE DISPERSIÓN',
+     xlab='hp',ylab='mpg')
+```
+
+- Escribe un programa que ordene las filas del data frame en función de la columna hp
+
+```{r}
+orden<-order(mtcars$hp)
+mtcars[orden,]
+
+# CON dplyr
+library(dplyr)
+mtcars %>% arrange(hp)
+```
+
+- Escribe un programa que muestre el número de la observación donde se alcanza el máximo de la razón entre  mpg y wt.
+
+```{r}
+razon<-mtcars$mpg/mtcars$wt
+which.max(razon)
+```
+
+
+
+### EJERCICIO 5
+
+####  Dado el fichero de datos "wine.data.txt" que contiene información sobre la composición química de diferentes tipos de vinos y su fichero descriptor "wine.names.txt".
+
+- Escribe un programa que cree el data.frame wine con los nombres de las variables....
+
+```{r}
+# guardamos los nombres
+nombres<-c('Type','Alcohol','Malic.Acid','Ash','Alcalinity.of.ash',
+           'Magnesium','Total.phenols','Flavanoids','Nonflavanoid.phenols',
+           'Proanthocyaninis','Color.intensity','Hue','Diluted.wines','Proline')
+
+# leemos el fichero externo y lo guardamos en el data.frame wine
+setwd('C:/Rproy/soft_estad_ii_upm')
+wine<-read.table(paste(getwd(),'/wine.txt',sep=''),sep=',')
+str(wine)
+
+# asignamos los nombres deseados, y comprobamos la estructura
+colnames(wine)<-nombres
+str(wine)
+```
+
+- Escribe un programa que calcule la mediana de Alcohol y Malic.Acid para cada tipo de vino (Type).
+
+```{r}
+tapply(wine$Alcohol,wine$Type,median)
+tapply(wine$Malic.Acid,wine$Type,median)
+```
+
+- Escribe un programa que realice un gráfico de barras mostrando el número de vinos de cada tipo que hay en el data.frame.
+
+```{r}
+wine$Type<-factor(wine$Type,levels=1:3,labels=c('Tipo 1','Tipo 2','Tipo 3'))
+barplot(table(wine$Type),
+        main='Gráfico de barras',
+        las=2)
+#el parámetro 'las = 0,1,2,3' rota los valores de los ejes
+```
+
+- Escribe un programa que cuente el númer ode observaciones con Alcohol mayor que 13 y Proline menor que 650.
+
+```{r}
+sum(wine$Alcohol>13 & wine$Proline<650)
+
+#con dplyr
+wine %>% filter(Alcohol>13,Proline<650) %>% summarise(n())
+```
+
+### EJERCICIO 6
+
+#### Dada la función 
+$$f(x)=\left\{\begin{array}{l}
+\frac{\ln(1-x)}{1-x} & x<0\\
+\\
+x\mathrm{e}^{-x} & x\geq 0
+\end{array}\right.$$
+
+- Dibuja $f(x)$ utilizando el valor 1 en la opción type.
+
